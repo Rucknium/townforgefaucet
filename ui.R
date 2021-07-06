@@ -9,7 +9,7 @@ uiFaucet <- function(req) {
     shiny::tabPanel(shiny::HTML("<u>Receive invitations</u>"),
       shiny::fluidRow(
         shiny::column(12,
-          h5(tags$span(style = "color:red", "NOTICE: All invitations are for the Townforge testnet")),
+          shiny::h5(tags$span(style = "color:red", "NOTICE: All invitations are for the Townforge testnet")),
           shiny::plotOutput("passage_image", width = "600px", height = "150px"),
           shiny::textAreaInput("user_passage_input", "Type the passage displayed above", width = "100%", height = "200px"),
           shiny::HTML("Note: Input verification is insensitive to case, punctuation, and spacing."),
@@ -25,8 +25,8 @@ uiFaucet <- function(req) {
           shiny::HTML("Verification text licensed by Perseus Digital Library under a Creative Commons Attribution-ShareAlike 3.0 United States License."),
           shiny::br(),
           shiny::HTML("Privacy policy: If you receive an invitation code, your IP address will be logged for 24 hours to prevent overuse of the service."),
-          div(style = "display: none;",
-            textInput("remote_addr", "remote_addr",
+          shiny::div(style = "display: none;",
+            shiny::textInput("remote_addr", "remote_addr",
               if (!is.null(req[["HTTP_X_FORWARDED_FOR"]]))
                 req[["HTTP_X_FORWARDED_FOR"]]
               else
@@ -41,7 +41,7 @@ uiFaucet <- function(req) {
     shiny::tabPanel(shiny::HTML("<u>Contribute invitations</u>"),
       shiny::fluidRow(
         shiny::column(12,
-          h4(tags$span(style = "color:red", "NOTICE: Invitation codes are not yet checked for validity, so please ensure your submissions are valid.")),
+          shiny::h4(tags$span(style = "color:red", "NOTICE: Invitation codes are not yet checked for validity, so please ensure your submissions are valid.")),
           shiny::textAreaInput("user_invitation_input", "Submit five-line invitation code", width = "100%", height = "200px"),
           shiny::actionButton("submit_invitation", "Submit"),
           shiny::verbatimTextOutput("invitation_submission_display"),

@@ -133,12 +133,12 @@ serverFaucet <- function(input, output, session) {
         inv.codes.df <- rbind(inv.codes.df, data.frame(invitation.code = invitation.input.txt, stringsAsFactors = FALSE) )
         write.csv(inv.codes.df, "data/undispensed-invitations.csv", row.names = FALSE)
         
-        output$invitation_submission_display <- renderText( {
+        output$invitation_submission_display <- shiny::renderText( {
           "Invitation successfully submitted to pool."
         })
         
       } else {
-        output$invitation_submission_display <- renderText( {"Invitation is not valid."})
+        output$invitation_submission_display <- shiny::renderText( {"Invitation is not valid."})
       }
     })
   })
