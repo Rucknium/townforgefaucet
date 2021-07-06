@@ -9,7 +9,7 @@ serverFaucet <- function(input, output, session) {
   beowulf.txt <- xml2::read_xml("data/Perseus_text_2003.01.0003.xml")
   beowulf.txt <- xml2::xml_text(xml2::xml_find_all(beowulf.txt, ".//l"))
   
-  passage.num.lines <- 1
+  passage.num.lines <- 6
   
   csv.files <- c("undispensed-invitations.csv", "dispensed-invitations.csv", "recipient-ip-addresses.csv")
   for (i in csv.files) {
@@ -82,7 +82,7 @@ serverFaucet <- function(input, output, session) {
         
         ip.addresses.df <- read.csv("data/recipient-ip-addresses.csv", stringsAsFactors = FALSE,
           colClasses = c("character", class(Sys.time())[1] ))
-        write.csv(ip.addresses.df[(ip.addresses.df$time.dispensed + 60 * 60 * 24) > Sys.time(), , drop = FALSE], 
+        write.csv(unique(ip.addresses.df[(ip.addresses.df$time.dispensed + 60 * 60 * 24) > Sys.time(), , drop = FALSE]), 
           "data/recipient-ip-addresses.csv", row.names = FALSE)
         # Purge IP addresses if they have been around for more than 24 hours
         # TODO: This is not a cron job, so only runs when someone triggers a submission. Maybe turn it into a cron job.
@@ -123,13 +123,13 @@ serverFaucet <- function(input, output, session) {
           "data/dispensed-invitations.csv", row.names = FALSE)
         
         inv.codes.df <- inv.codes.df[ (-1) * inv.code.to.display.index, , drop = FALSE]
-        write.csv(inv.codes.df, "data/undispensed-invitations.csv", row.names = FALSE)
+        write.csv(unique(inv.codes.df), "data/undispensed-invitations.csv", row.names = FALSE)
         
         ip.addresses.df <- read.csv("data/recipient-ip-addresses.csv", stringsAsFactors = FALSE,
           colClasses = c("character", class(Sys.time())[1] ))
         ip.addresses.df <- rbind(ip.addresses.df, 
           data.frame(ip.address = user.ip.address, time.dispensed = Sys.time(), stringsAsFactors = FALSE) )
-        write.csv(ip.addresses.df, "data/recipient-ip-addresses.csv", row.names = FALSE)
+        write.csv(unique(ip.addresses.df), "data/recipient-ip-addresses.csv", row.names = FALSE)
         
         session.vars$already.dispensed <- TRUE
         
@@ -161,7 +161,7 @@ serverFaucet <- function(input, output, session) {
         
         inv.codes.df <- read.csv("data/undispensed-invitations.csv", stringsAsFactors = FALSE)
         inv.codes.df <- rbind(inv.codes.df, data.frame(invitation.code = invitation.input.txt, stringsAsFactors = FALSE) )
-        write.csv(inv.codes.df, "data/undispensed-invitations.csv", row.names = FALSE)
+        write.csv(unique(inv.codes.df), "data/undispensed-invitations.csv", row.names = FALSE)
         
         output$invitation_submission_display <- shiny::renderText( {
           "Invitation successfully submitted to pool."
