@@ -24,17 +24,22 @@ uiFaucet <- function(req) {
           shiny::br(),
           shiny::HTML("Verification text licensed by Perseus Digital Library under a Creative Commons Attribution-ShareAlike 3.0 United States License."),
           shiny::br(),
-          shiny::HTML("Privacy policy: If you receive an invitation code, your IP address will be logged for 24 hours to prevent overuse of the service."),
-          shiny::div(style = "display: none;",
-            shiny::textInput("remote_addr", "remote_addr",
-              if (!is.null(req[["HTTP_X_FORWARDED_FOR"]]))
-                req[["HTTP_X_FORWARDED_FOR"]]
-              else
-                req[["REMOTE_ADDR"]]
-            )
-          )
+          shiny::HTML("Privacy policy: If you receive an invitation code, your IP address will be sent to https://ipinfo.io and logged for 24 hours to prevent overuse of the service."),
+          # shiny::div(style = "display: none;",
+          #   shiny::textInput("remote_addr", "remote_addr",
+          #     if (!is.null(req[["HTTP_X_FORWARDED_FOR"]]))
+          #       req[["HTTP_X_FORWARDED_FOR"]]
+          #     else
+          #       req[["REMOTE_ADDR"]]
+          #   )
+          # ), 
           # To get IP address. See https://github.com/rstudio/shiny/issues/141#issuecomment-854707910
           
+          tags$head(
+            tags$script(src = "getIP.js")
+          )
+          # See https://stackoverflow.com/questions/43888099/get-user-ip-in-shiny
+          # NOTE: This service has a rate limit of 1k requests per day: https://ipinfo.io/missingauth
         )
       )
     ),

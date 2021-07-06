@@ -36,8 +36,13 @@ serverFaucet <- function(input, output, session) {
   
   session.vars <- shiny::reactiveValues(already.dispensed = FALSE)
   
-  output$passage_verification_display <- renderText( {list.files(recursive = TRUE)})
+  # output$passage_verification_display <- renderText( {list.files(recursive = TRUE)})
   # output$passage_verification_display <- renderText( {"TEST"})
+  
+  IP <- reactive({ input$getIP })
+  
+  # output$passage_verification_display <- renderText( {IP()$ip })
+  
   
   output$passage_image <- shiny::renderPlot({
     
@@ -78,7 +83,7 @@ serverFaucet <- function(input, output, session) {
         # TODO: This is not a cron job, so only runs when someone triggers a submission. Maybe turn it into a cron job.
         # TODO: Specify colClasses for other read.csv() uses
         
-        most.recent.time.dispensed <- max(ip.addresses.df$time.dispensed[ip.addresses.df$ip.address == isolate(input$remote_addr)])
+        most.recent.time.dispensed <- max(ip.addresses.df$time.dispensed[ip.addresses.df$ip.address == isolate(IP()$ip)])
         
         if ( is.finite(most.recent.time.dispensed) && (most.recent.time.dispensed + 60 * 60 * 24) > Sys.time() ) {
           output$passage_verification_display <- renderText( {
@@ -110,7 +115,7 @@ serverFaucet <- function(input, output, session) {
         ip.addresses.df <- read.csv("data/recipient-ip-addresses.csv", stringsAsFactors = FALSE,
           colClasses = c("character", class(Sys.time())[1] ))
         ip.addresses.df <- rbind(ip.addresses.df, 
-          data.frame(ip.address = isolate(input$remote_addr), time.dispensed = Sys.time(), stringsAsFactors = FALSE) )
+          data.frame(ip.address = isolate(IP()$ip), time.dispensed = Sys.time(), stringsAsFactors = FALSE) )
         write.csv(ip.addresses.df, "data/recipient-ip-addresses.csv", row.names = FALSE)
         
         session.vars$already.dispensed <- TRUE
