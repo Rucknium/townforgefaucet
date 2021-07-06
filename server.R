@@ -66,18 +66,18 @@ serverFaucet <- function(input, output, session) {
       
       Sys.sleep(5)
       
-      if (input$submit_passage > 5) {
+      if (isolate(input$submit_passage) > 5) {
         output$passage_verification_display <- renderText( {"Too many attempts."})
         return()
       }
       
-      if (session.vars$already.dispensed) {
+      if (isolate(session.vars$already.dispensed)) {
         output$passage_verification_display <- renderText( {"Already dispensed an invitation code this session."})
         return()
       }
       
       if (tolower(gsub("[^[:alpha:]]", "", paste0(passage, collapse = ""))) == 
-          tolower(gsub("[^[:alpha:]]", "", input$user_passage_input)) ) {
+          tolower(gsub("[^[:alpha:]]", "", isolate(input$user_passage_input))) ) {
         # TODO: maybe instead of exact comparison, do a comparison of edit distance
         
         ip.addresses.df <- read.csv("data/recipient-ip-addresses.csv", stringsAsFactors = FALSE,
@@ -148,7 +148,7 @@ serverFaucet <- function(input, output, session) {
       
       Sys.sleep(5)
       
-      invitation.input.txt <- input$user_invitation_input
+      invitation.input.txt <- isolate(input$user_invitation_input)
       invitation.input.txt <- gsub("(^[^[:alnum:]]+)|([^[:alnum:]]+$)", "", invitation.input.txt)
       # Trim whitespace before and after
       invitation.input.txt <- gsub("[^[:alnum:]]*\n[^[:alnum:]]*", "\n", invitation.input.txt)
