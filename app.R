@@ -9,6 +9,9 @@ for (i in csv.files) {
   }
 }
 
+Sys.setenv(TZ = "UTC")
+thematic::thematic_shiny(font = "auto")
+# ^ This is crucial to make the dark mode work for the plots
 
 shiny::shinyApp(
   ui = uiFaucet,

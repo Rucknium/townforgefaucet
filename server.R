@@ -27,6 +27,9 @@ serverFaucet <- function(input, output, session) {
   
   session.vars <- shiny::reactiveValues(already.dispensed = FALSE)
   
+  output$passage_verification_display <- renderText( {list.files(recursive = TRUE)})
+  # output$passage_verification_display <- renderText( {"TEST"})
+  
   output$passage_image <- shiny::renderPlot({
     
     observe(input$dark_mode)
