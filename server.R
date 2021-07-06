@@ -5,11 +5,11 @@ serverFaucet <- function(input, output, session) {
   
   Sys.setenv(TZ = "UTC")
   thematic::thematic_shiny(font = "auto")
-  
+             
   beowulf.txt <- xml2::read_xml("data/Perseus_text_2003.01.0003.xml")
   beowulf.txt <- xml2::xml_text(xml2::xml_find_all(beowulf.txt, ".//l"))
   
-  passage.num.lines <- 6
+  passage.num.lines <- 1
   
   csv.files <- c("undispensed-invitations.csv", "dispensed-invitations.csv", "recipient-ip-addresses.csv")
   for (i in csv.files) {
@@ -83,7 +83,9 @@ serverFaucet <- function(input, output, session) {
         # TODO: This is not a cron job, so only runs when someone triggers a submission. Maybe turn it into a cron job.
         # TODO: Specify colClasses for other read.csv() uses
         
-        most.recent.time.dispensed <- max(ip.addresses.df$time.dispensed[ip.addresses.df$ip.address == isolate(IP()$ip)])
+        user.ip.address <- isolate(IP()$ip)
+        
+        most.recent.time.dispensed <- max(ip.addresses.df$time.dispensed[ip.addresses.df$ip.address == user.ip.address])
         
         if ( is.finite(most.recent.time.dispensed) && (most.recent.time.dispensed + 60 * 60 * 24) > Sys.time() ) {
           output$passage_verification_display <- renderText( {
@@ -115,7 +117,7 @@ serverFaucet <- function(input, output, session) {
         ip.addresses.df <- read.csv("data/recipient-ip-addresses.csv", stringsAsFactors = FALSE,
           colClasses = c("character", class(Sys.time())[1] ))
         ip.addresses.df <- rbind(ip.addresses.df, 
-          data.frame(ip.address = isolate(IP()$ip), time.dispensed = Sys.time(), stringsAsFactors = FALSE) )
+          data.frame(ip.address = user.ip.address, time.dispensed = Sys.time(), stringsAsFactors = FALSE) )
         write.csv(ip.addresses.df, "data/recipient-ip-addresses.csv", row.names = FALSE)
         
         session.vars$already.dispensed <- TRUE
