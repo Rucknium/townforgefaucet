@@ -41,7 +41,12 @@ serverFaucet <- function(input, output, session) {
   
   IP <- reactive({ input$getIP })
   
-  # output$passage_verification_display <- renderText( {IP()$ip })
+  output$passage_verification_display <- renderText( {
+    if (length(IP()$ip) == 0) {
+      "WARNING: Failed to obtain IP address. Requesting an invitation code will fail. The most likely cause is using TOR. VPNs should work."
+    } else {
+      ""
+    } })
   
   
   output$passage_image <- shiny::renderPlot({
@@ -84,6 +89,12 @@ serverFaucet <- function(input, output, session) {
         # TODO: Specify colClasses for other read.csv() uses
         
         user.ip.address <- isolate(IP()$ip)
+        
+        if (length(user.ip.address) == 0) { 
+          output$passage_verification_display <- renderText( {
+            "Failed to obtain IP address. IP addresses are logged to prevent overuse of the service. The most likely cause is using TOR. VPNs should work."})
+          return()
+        }
         
         most.recent.time.dispensed <- max(ip.addresses.df$time.dispensed[ip.addresses.df$ip.address == user.ip.address])
         
