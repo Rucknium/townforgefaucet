@@ -13,10 +13,10 @@ serverFaucet <- function(input, output, session) {
   
   if (Sys.info()["sysname"] == "Linux") {
     # https://stackoverflow.com/questions/4747715/how-to-check-the-os-within-r
-    system("townforged --testnet --rpc-bind-port 28881", wait = FALSE,
+    system("townforged --testnet --non-interactive --rpc-bind-port 28881", wait = FALSE,
       ignore.stdout = TRUE, ignore.stderr = TRUE)
     # This will send a command o start townforged regardless of if it is running.
-    # If it is running, the commamd will merely fail .
+    # If it is running, the command will merely fail.
     # Make sure to have townforged in /usr/local/bin
   }
   
