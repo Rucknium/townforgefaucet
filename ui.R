@@ -46,7 +46,7 @@ uiFaucet <- function(req) {
     shiny::tabPanel(shiny::HTML("<u>Contribute invitations</u>"),
       shiny::fluidRow(
         shiny::column(12,
-          shiny::h4(tags$span(style = "color:red", "NOTICE: Invitation codes are not yet checked for validity, so please ensure your submissions are valid.")),
+          # shiny::h4(tags$span(style = "color:red", "NOTICE: Invitation codes are not yet checked for validity, so please ensure your submissions are valid.")),
           shiny::textAreaInput("user_invitation_input", "Submit five-line invitation code", width = "100%", height = "200px"),
           shiny::actionButton("submit_invitation", "Submit"),
           shiny::verbatimTextOutput("invitation_submission_display"),

@@ -5,11 +5,20 @@ serverFaucet <- function(input, output, session) {
   
   Sys.setenv(TZ = "UTC")
   thematic::thematic_shiny(font = "auto")
-             
+  
   beowulf.txt <- xml2::read_xml("data/Perseus_text_2003.01.0003.xml")
   beowulf.txt <- xml2::xml_text(xml2::xml_find_all(beowulf.txt, ".//l"))
   
   passage.num.lines <- 6
+  
+  if (Sys.info()["sysname"] == "Linux") {
+    # https://stackoverflow.com/questions/4747715/how-to-check-the-os-within-r
+    system("townforged --testnet --rpc-bind-port 28881", wait = FALSE,
+      ignore.stdout = TRUE, ignore.stderr = TRUE)
+    # This will send a command o start townforged regardless of if it is running.
+    # If it is running, the commamd will merely fail .
+    # Make sure to have townforged in /usr/local/bin
+  }
   
   csv.files <- c("undispensed-invitations.csv", "dispensed-invitations.csv", "recipient-ip-addresses.csv")
   for (i in csv.files) {
@@ -64,7 +73,7 @@ serverFaucet <- function(input, output, session) {
   shiny::observeEvent(input$submit_passage, {
     shiny::withProgress(message = "Submission in progress...", {
       
-      Sys.sleep(5)
+      # Sys.sleep(5)
       
       if (isolate(input$submit_passage) > 5) {
         output$passage_verification_display <- renderText( {"Too many attempts."})
@@ -146,16 +155,40 @@ serverFaucet <- function(input, output, session) {
   shiny::observeEvent(input$submit_invitation, {
     shiny::withProgress(message = "Submission in progress...", {
       
-      Sys.sleep(5)
+      # Sys.sleep(5)
       
       invitation.input.txt <- isolate(input$user_invitation_input)
       invitation.input.txt <- gsub("(^[^[:alnum:]]+)|([^[:alnum:]]+$)", "", invitation.input.txt)
       # Trim whitespace before and after
       invitation.input.txt <- gsub("[^[:alnum:]]*\n[^[:alnum:]]*", "\n", invitation.input.txt)
       # Sanitize any issue with paragraph returns
-
       
-      if (TRUE) { # add validation of invitation.input.txt and check if it has been used
+      
+      inv.validation.check <- TownforgeR::tf_rpc_curl(method = "cc_is_invitation_used", 
+        url = "http://127.0.0.1:28881/json_rpc", 
+        params = list(invitation = invitation.input.txt ))
+      # NOTE: townforged must be on port 28881
+      
+      if (length(inv.validation.check$error > 1)) {
+        output$invitation_submission_display <- shiny::renderText( {
+          "Invitation submission is malformed. Submission rejected." })
+        return()
+      }
+      
+      if (inv.validation.check$result$used ) {
+        output$invitation_submission_display <- shiny::renderText( {
+          "Invitation has already been redeemed. Submission rejected." })
+        return()
+      }
+      
+      if ( ! inv.validation.check$result$balance_ok ) {
+        output$invitation_submission_display <- shiny::renderText( {
+          "Funds in inviting account are insufficient for redemption of invitation. Submission rejected." })
+        return()
+      }
+      
+      if ( (! inv.validation.check$result$used) & inv.validation.check$result$balance_ok ) {
+        # TODO: Want to check block expiration height
         
         invitation.input.txt <- gsub("[^[:alnum:]]*\n[^[:alnum:]]*", "|", invitation.input.txt)
         
@@ -164,12 +197,9 @@ serverFaucet <- function(input, output, session) {
         write.csv(unique(inv.codes.df), "data/undispensed-invitations.csv", row.names = FALSE)
         
         output$invitation_submission_display <- shiny::renderText( {
-          "Invitation successfully submitted to pool."
-        })
-        
-      } else {
-        output$invitation_submission_display <- shiny::renderText( {"Invitation is not valid."})
-      }
+          "Invitation successfully submitted to pool."})
+        return()
+      } 
     })
   })
   
