@@ -2,6 +2,9 @@
 
 uiFaucet <- function(req) {
   # Structure it like function(req) because doing https://github.com/rstudio/shiny/issues/141#issuecomment-854707910
+  
+  collect.ip <- FALSE
+  
   shiny::navbarPage("Townforge Invitation Faucet", #  paste("TownforgeR", gsub("`|´", "", packageVersion("TownforgeR"))),
     #collapsible = TRUE,
     theme = bslib::bs_theme(bootswatch = "cosmo", bg = "black", fg = "white", primary = "purple"),
@@ -24,7 +27,7 @@ uiFaucet <- function(req) {
           shiny::br(),
           shiny::HTML("Verification text licensed by Perseus Digital Library under a Creative Commons Attribution-ShareAlike 3.0 United States License."),
           shiny::br(),
-          shiny::HTML("Privacy policy: If you receive an invitation code, your IP address will be sent to https://ipinfo.io and logged for 24 hours to prevent overuse of the service."),
+          shiny::HTML(ifelse(collect.ip, "Privacy policy: If you receive an invitation code, your IP address will be sent to https://ipinfo.io and logged for 24 hours to prevent overuse of the service.", "")),
           # shiny::div(style = "display: none;",
           #   shiny::textInput("remote_addr", "remote_addr",
           #     if (!is.null(req[["HTTP_X_FORWARDED_FOR"]]))
@@ -35,9 +38,7 @@ uiFaucet <- function(req) {
           # ), 
           # To get IP address. See https://github.com/rstudio/shiny/issues/141#issuecomment-854707910
           
-          tags$head(
-            tags$script(src = "getIP.js")
-          )
+          ifelse(collect.ip, tags$head( tags$script(src = "getIP.js") ), "")
           # See https://stackoverflow.com/questions/43888099/get-user-ip-in-shiny
           # NOTE: This service has a rate limit of 1k requests per day: https://ipinfo.io/missingauth
         )

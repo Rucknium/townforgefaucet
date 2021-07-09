@@ -3,6 +3,8 @@
 
 serverFaucet <- function(input, output, session) {
   
+  collect.ip <- FALSE
+  
   Sys.setenv(TZ = "UTC")
   thematic::thematic_shiny(font = "auto")
   
@@ -47,15 +49,18 @@ serverFaucet <- function(input, output, session) {
   
   # output$passage_verification_display <- renderText( {list.files(recursive = TRUE)})
   # output$passage_verification_display <- renderText( {"TEST"})
-  
-  IP <- reactive({ input$getIP })
-  
-  output$passage_verification_display <- renderText( {
-    if (length(IP()$ip) == 0) {
-      "WARNING: Failed to obtain IP address. Requesting an invitation code will fail. The most likely cause is using TOR. VPNs should work."
-    } else {
-      ""
-    } })
+  if (collect.ip) {
+    IP <- reactive({ input$getIP })
+    
+    output$passage_verification_display <- renderText( {
+      if (length(IP()$ip) == 0) {
+        "WARNING: Failed to obtain IP address. Requesting an invitation code will fail. The most likely cause is using TOR. VPNs should work."
+      } else {
+        ""
+      } })
+  } else {
+    output$passage_verification_display <- renderText("")
+  }
   
   
   output$passage_image <- shiny::renderPlot({
@@ -89,31 +94,35 @@ serverFaucet <- function(input, output, session) {
           tolower(gsub("[^[:alpha:]]", "", isolate(input$user_passage_input))) ) {
         # TODO: maybe instead of exact comparison, do a comparison of edit distance
         
-        ip.addresses.df <- read.csv("data/recipient-ip-addresses.csv", stringsAsFactors = FALSE,
-          colClasses = c("character", class(Sys.time())[1] ))
-        write.csv(unique(ip.addresses.df[(ip.addresses.df$time.dispensed + 60 * 60 * 24) > Sys.time(), , drop = FALSE]), 
-          "data/recipient-ip-addresses.csv", row.names = FALSE)
-        # Purge IP addresses if they have been around for more than 24 hours
-        # TODO: This is not a cron job, so only runs when someone triggers a submission. Maybe turn it into a cron job.
-        # TODO: Specify colClasses for other read.csv() uses
-        
-        user.ip.address <- isolate(IP()$ip)
-        
-        if (length(user.ip.address) == 0) { 
-          output$passage_verification_display <- renderText( {
-            "Failed to obtain IP address. IP addresses are logged to prevent overuse of the service. The most likely cause is using TOR. VPNs should work."})
-          return()
-        }
-        
-        most.recent.time.dispensed <- max(ip.addresses.df$time.dispensed[ip.addresses.df$ip.address == user.ip.address])
-        
-        if ( is.finite(most.recent.time.dispensed) && (most.recent.time.dispensed + 60 * 60 * 24) > Sys.time() ) {
-          output$passage_verification_display <- renderText( {
-            wait.time <- most.recent.time.dispensed + 60 * 60 * 24 - Sys.time()
-            paste0("Only one invitation code per 24 hours per user.\nWait for ", 
-              round(wait.time, 1), " more ", attr(wait.time, "units"), " before trying again." )
-          })
-          return()
+        if (collect.ip) {
+          
+          ip.addresses.df <- read.csv("data/recipient-ip-addresses.csv", stringsAsFactors = FALSE,
+            colClasses = c("character", class(Sys.time())[1] ))
+          write.csv(unique(ip.addresses.df[(ip.addresses.df$time.dispensed + 60 * 60 * 24) > Sys.time(), , drop = FALSE]), 
+            "data/recipient-ip-addresses.csv", row.names = FALSE)
+          # Purge IP addresses if they have been around for more than 24 hours
+          # TODO: This is not a cron job, so only runs when someone triggers a submission. Maybe turn it into a cron job.
+          # TODO: Specify colClasses for other read.csv() uses
+          
+          user.ip.address <- isolate(IP()$ip)
+          
+          if (length(user.ip.address) == 0) { 
+            output$passage_verification_display <- renderText( {
+              "Failed to obtain IP address. IP addresses are logged to prevent overuse of the service. The most likely cause is using TOR. VPNs should work."})
+            return()
+          }
+          
+          
+          most.recent.time.dispensed <- max(ip.addresses.df$time.dispensed[ip.addresses.df$ip.address == user.ip.address])
+          
+          if ( is.finite(most.recent.time.dispensed) && (most.recent.time.dispensed + 60 * 60 * 24) > Sys.time() ) {
+            output$passage_verification_display <- renderText( {
+              wait.time <- most.recent.time.dispensed + 60 * 60 * 24 - Sys.time()
+              paste0("Only one invitation code per 24 hours per user.\nWait for ", 
+                round(wait.time, 1), " more ", attr(wait.time, "units"), " before trying again." )
+            })
+            return()
+          }
         }
         
         inv.codes.df <- read.csv("data/undispensed-invitations.csv", stringsAsFactors = FALSE)
@@ -134,11 +143,13 @@ serverFaucet <- function(input, output, session) {
         inv.codes.df <- inv.codes.df[ (-1) * inv.code.to.display.index, , drop = FALSE]
         write.csv(unique(inv.codes.df), "data/undispensed-invitations.csv", row.names = FALSE)
         
-        ip.addresses.df <- read.csv("data/recipient-ip-addresses.csv", stringsAsFactors = FALSE,
-          colClasses = c("character", class(Sys.time())[1] ))
-        ip.addresses.df <- rbind(ip.addresses.df, 
-          data.frame(ip.address = user.ip.address, time.dispensed = Sys.time(), stringsAsFactors = FALSE) )
-        write.csv(unique(ip.addresses.df), "data/recipient-ip-addresses.csv", row.names = FALSE)
+        if (collect.ip) {
+          ip.addresses.df <- read.csv("data/recipient-ip-addresses.csv", stringsAsFactors = FALSE,
+            colClasses = c("character", class(Sys.time())[1] ))
+          ip.addresses.df <- rbind(ip.addresses.df, 
+            data.frame(ip.address = user.ip.address, time.dispensed = Sys.time(), stringsAsFactors = FALSE) )
+          write.csv(unique(ip.addresses.df), "data/recipient-ip-addresses.csv", row.names = FALSE)
+        }
         
         session.vars$already.dispensed <- TRUE
         
