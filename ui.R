@@ -12,7 +12,7 @@ uiFaucet <- function(req) {
     shiny::tabPanel(shiny::HTML("<u>Receive invitations</u>"),
       shiny::fluidRow(
         shiny::column(12,
-          shiny::h5(tags$span(style = "color:red", "NOTICE: All invitations are for the Townforge testnet")),
+          shiny::h5(tags$span(style = "color:red", "NOTICE: All invitations are for the Townforge testnet (version 0.32.0.1+)")),
           shiny::plotOutput("passage_image", width = "600px", height = "150px"),
           shiny::textAreaInput("user_passage_input", "Type the passage displayed above", width = "100%", height = "200px"),
           shiny::HTML("Note: Input verification is insensitive to case, punctuation, and spacing."),
